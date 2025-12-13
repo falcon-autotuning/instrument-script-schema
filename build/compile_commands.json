@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/home/tylerk/falcon-dev/instrument-script-schema/build",
+  "command": "/usr/bin/c++  -I/home/tylerk/falcon-dev/instrument-script-schema/include -std=gnu++17 -o CMakeFiles/instrument_script_schema.dir/src/schema_validator.cpp.o -c /home/tylerk/falcon-dev/instrument-script-schema/src/schema_validator.cpp",
+  "file": "/home/tylerk/falcon-dev/instrument-script-schema/src/schema_validator.cpp",
+  "output": "CMakeFiles/instrument_script_schema.dir/src/schema_validator.cpp.o"
+},
+{
+  "directory": "/home/tylerk/falcon-dev/instrument-script-schema/build",
+  "command": "/usr/bin/c++  -I/home/tylerk/falcon-dev/instrument-script-schema/include -std=gnu++17 -o CMakeFiles/instrument_script_schema.dir/embedded_schemas.cpp.o -c /home/tylerk/falcon-dev/instrument-script-schema/build/embedded_schemas.cpp",
+  "file": "/home/tylerk/falcon-dev/instrument-script-schema/build/embedded_schemas.cpp",
+  "output": "CMakeFiles/instrument_script_schema.dir/embedded_schemas.cpp.o"
+},
+{
+  "directory": "/home/tylerk/falcon-dev/instrument-script-schema/build",
+  "command": "/usr/bin/c++  -I/home/tylerk/falcon-dev/instrument-script-schema/include -std=gnu++17 -o CMakeFiles/test_validator.dir/tests/test_validator.cpp.o -c /home/tylerk/falcon-dev/instrument-script-schema/tests/test_validator.cpp",
+  "file": "/home/tylerk/falcon-dev/instrument-script-schema/tests/test_validator.cpp",
+  "output": "CMakeFiles/test_validator.dir/tests/test_validator.cpp.o"
+},
+{
+  "directory": "/home/tylerk/falcon-dev/instrument-script-schema/build",
+  "command": "/usr/bin/c++  -I/home/tylerk/falcon-dev/instrument-script-schema/include -std=gnu++17 -o CMakeFiles/test_examples.dir/tests/test_examples.cpp.o -c /home/tylerk/falcon-dev/instrument-script-schema/tests/test_examples.cpp",
+  "file": "/home/tylerk/falcon-dev/instrument-script-schema/tests/test_examples.cpp",
+  "output": "CMakeFiles/test_examples.dir/tests/test_examples.cpp.o"
+}
+]

@@ -1,0 +1,187 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://falcon. io/schemas/instrument-api.json",
+  "title": "Instrument API Definition",
+  "description": "Schema for defining a single instrument's communication API",
+  "type": "object",
+  "required": [
+    "api_version",
+    "instrument",
+    "protocol",
+    "commands"
+  ],
+  "properties": {
+    "api_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of this API definition"
+    },
+    "instrument": {
+      "type": "object",
+      "required": [
+        "vendor",
+        "model",
+        "identifier"
+      ],
+      "properties": {
+        "vendor": {
+          "type": "string",
+          "description": "Manufacturer name (e.g., Keysight, Tektronix)"
+        },
+        "model": {
+          "type": "string",
+          "description": "Model number (e.g., DSO9254A)"
+        },
+        "identifier": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "Unique identifier used in scripts (e.g., GPI1, API1)"
+        },
+        "description": {
+          "type": "string"
+        },
+        "firmware_version": {
+          "type": "string"
+        }
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "VISA",
+            "Custom"
+          ],
+          "description": "Communication protocol type"
+        },
+        "config": {
+          "type": "object",
+          "description": "Protocol-specific configuration",
+          "properties": {
+            "resource_string": {
+              "type": "string",
+              "description": "VISA resource string (for VISA protocol)"
+            },
+            "terminator": {
+              "type": "string",
+              "description": "Command terminator (e.g., \\n, \\r\\n)",
+              "default": "\\n"
+            },
+            "timeout_ms": {
+              "type": "integer",
+              "default": 5000,
+              "description": "Communication timeout in milliseconds"
+            }
+          }
+        }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "description": "Available commands for this instrument",
+      "patternProperties": {
+        "^[A-Z][A-Z0-9_]*$": {
+          "$ref": "#/definitions/command"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "command": {
+      "type": "object",
+      "required": [
+        "template"
+      ],
+      "properties": {
+        "template": {
+          "type": "string",
+          "description": "Command template with {param} placeholders (e.g., 'SOUR{channel}: VOLT {voltage}')"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of what this command does"
+        },
+        "parameters": {
+          "type": "array",
+          "description": "Ordered list of parameters for this command",
+          "items": {
+            "$ref": "#/definitions/parameter"
+          }
+        },
+        "returns": {
+          "type": "string",
+          "enum": [
+            "void",
+            "int",
+            "float",
+            "string",
+            "bool",
+            "array<float>",
+            "array<int>"
+          ],
+          "default": "void",
+          "description": "Return type of the command"
+        },
+        "query": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this is a query command (expects response)"
+        }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Parameter name (lowercase with underscores)"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "int",
+            "float",
+            "string",
+            "bool"
+          ],
+          "description": "Parameter data type"
+        },
+        "description": {
+          "type": "string"
+        },
+        "precision": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMinimum": true,
+          "description": "Floating point precision (for float types)"
+        },
+        "min": {
+          "type": "number",
+          "description": "Minimum allowed value"
+        },
+        "max": {
+          "type": "number",
+          "description": "Maximum allowed value"
+        },
+        "default": {
+          "description": "Default value if not provided"
+        },
+        "unit": {
+          "type": "string",
+          "description": "Physical unit (e.g., 'V', 'Hz', 's')"
+        }
+      }
+    }
+  }
+}

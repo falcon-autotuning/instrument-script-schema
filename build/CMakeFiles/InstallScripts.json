@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/tylerk/falcon-dev/instrument-script-schema/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

@@ -1,0 +1,23 @@
+version: "1.0.0"
+
+special_functions:
+  IS_DATA_COLLECTION:
+    handler: "data_collection_process"
+    async: true
+    description: "Sends data to the data collection process for analysis (non-blocking)"
+    parameters:
+      - name: data
+        type: DataHandle
+        description: "Handle to acquired data"
+
+  LOG_EVENT:
+    handler: "logging_process"
+    async: true
+    description: "Log an event to the system"
+    parameters:
+      - name: message
+        type: string
+        description: "Log message"
+      - name: level
+        type: string
+        description: "Log level (INFO, WARN, ERROR)"

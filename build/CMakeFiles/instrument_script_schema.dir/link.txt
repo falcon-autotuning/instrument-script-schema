@@ -1,0 +1,2 @@
+/usr/bin/ar qc libinstrument_script_schema.a CMakeFiles/instrument_script_schema.dir/src/schema_validator.cpp.o CMakeFiles/instrument_script_schema.dir/embedded_schemas.cpp.o
+/usr/bin/ranlib libinstrument_script_schema.a

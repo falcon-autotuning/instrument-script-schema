@@ -1,0 +1,64 @@
+contexts:
+  dc_getset:
+    name: "DC Get/Set"
+    description: "Simple DC voltage control and measurement"
+    fields:
+      - name: getters
+        type: "table<number, {[1]:  string, [2]: number}>"
+        description: "List of instruments to read from:  {instrument_id, channel}"
+      - name: setters
+        type: "table<number, {[1]: string, [2]: number}>"
+        description: "List of instruments to write to: {instrument_id, channel}"
+      - name: setVoltages
+        type: "table<number, number>"
+        description: "Voltages to set, indexed by channel"
+      - name: sampleRate
+        type: "number"
+        description: "Sampling rate in Hz"
+        optional: false
+
+  waveform_1d:
+    name: "1D Waveform Acquisition"
+    description: "Single-channel time-series waveform capture"
+    fields:
+      - name: getters
+        type: "table<number, {[1]: string, [2]: number}>"
+        description: "Instruments to acquire from"
+      - name: setters
+        type: "table<number, {[1]: string, [2]: number}>"
+        description: "Instruments to configure"
+      - name: setVoltageDomains
+        type: "table<number, {[1]: number, [2]: number}>"
+        description: "Voltage ranges per channel:  {min, max}"
+      - name: sampleRate
+        type: "number"
+        description: "Sampling rate in Hz"
+      - name: numPoints
+        type: "integer"
+        description: "Number of points to acquire"
+
+  waveform_2d:
+    name: "2D Waveform Acquisition"
+    description: "Multi-channel synchronized waveform capture"
+    fields:
+      - name: getters
+        type: "table<number, {[1]: string, [2]: number}>"
+        description: "Instruments to acquire from"
+      - name: setters
+        type: "table<number, {[1]: string, [2]:  number}>"
+        description: "Instruments to configure"
+      - name: triggerChannel
+        type: "integer"
+        description: "Channel to use for triggering"
+      - name: triggerLevel
+        type: "number"
+        description: "Trigger level in volts"
+      - name: sampleRate
+        type: "number"
+        description: "Sampling rate in Hz"
+      - name: numPoints
+        type: "integer"
+        description: "Number of points per channel"
+      - name: numChannels
+        type: "integer"
+        description: "Number of channels to acquire"
