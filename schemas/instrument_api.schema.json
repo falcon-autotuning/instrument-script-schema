@@ -14,7 +14,7 @@
     "api_version": {
       "type": "string",
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
-      "description": "Semantic version of this API definition"
+      "description": "**API Version** (required)\n\nSemantic version string (e.g., `1.0.0`)\n\nDefines the instrument API schema version."
     },
     "instrument": {
       "type": "object",
@@ -23,33 +23,34 @@
         "model",
         "identifier"
       ],
+      "description": "**Instrument Configuration** (required)\n\nDefines the physical instrument details including vendor, model, and identifier.",
       "properties": {
         "vendor": {
           "type": "string",
-          "description": "Manufacturer name (e.g., Keysight, Tektronix)"
+          "description": "**Vendor Name** (required)\n\nManufacturer of the instrument (e.g., `Keysight`, `Rohde & Schwarz`)."
         },
         "model": {
           "type": "string",
-          "description": "Model number (e.g., DSO9254A)"
+          "description": "**Model Number** (required)\n\nSpecific model identifier (e.g., `DSO9254A`, `RTM3004`)."
         },
         "identifier": {
           "type": "string",
           "pattern": "^[A-Z][A-Z0-9_]*$",
-          "description": "Unique identifier used in scripts (e.g., GPI1, API1)"
+          "description": "**Unique Identifier** (required)\n\nA unique name for this instrument instance (e.g., `SCOPE_1`, `GPI`)."
         },
-        "description": {
-          "type": "string"
-        },
-        "firmware_version": {
-          "type": "string"
+        "desc": {
+          "type": "string",
+          "description": "**Description** (optional)\n\nHuman-readable description of the instrument."
         }
-      }
+      },
+      "additionalProperties": false
     },
     "protocol": {
       "type": "object",
       "required": [
         "type"
       ],
+      "description": "**Protocol Configuration** (required)\n\nDefines how to communicate with the instrument.",
       "properties": {
         "type": {
           "type": "string",
@@ -57,13 +58,14 @@
             "VISA",
             "Custom"
           ],
-          "description": "Communication protocol type"
+          "description": "**Protocol Type** (required)\n\nCommunication protocol:  `VISA`, `CUSTOM`."
         }
-      }
+      },
+      "additionalProperties": false
     },
     "commands": {
       "type": "object",
-      "description": "Available commands for this instrument",
+      "description": "**Commands** (required)\n\nInstrument command definitions mapping command names to their implementations.",
       "patternProperties": {
         "^[A-Z][A-Z0-9_]*$": {
           "$ref": "#/definitions/command"
@@ -76,20 +78,22 @@
     "command": {
       "type": "object",
       "required": [
-        "template"
+        "template",
+        "parameters",
+        "query"
       ],
       "properties": {
         "template": {
           "type": "string",
-          "description": "Command template with {param} placeholders (e.g., 'SOUR{channel}: VOLT {voltage}')"
+          "description": "**Template** (required)\n\nCommand template with {param} placeholders (e.g., 'SOUR{channel}: VOLT {voltage}')"
         },
         "description": {
           "type": "string",
-          "description": "Human-readable description of what this command does"
+          "description": "**Description** (optional)\n\nHuman-readable description of what this command does"
         },
         "parameters": {
           "type": "array",
-          "description": "Ordered list of parameters for this command",
+          "description": "**Parameters** (required)\n\nOrdered list of parameters for this command",
           "items": {
             "$ref": "#/definitions/parameter"
           }
@@ -106,14 +110,15 @@
             "array<int>"
           ],
           "default": "void",
-          "description": "Return type of the command"
+          "description": "**Returns** (Optional)\n\nReturn type of the command. Can be int, float, string, bool, array<float>, array<int>, or void (no return)."
         },
         "query": {
           "type": "boolean",
           "default": false,
-          "description": "Whether this is a query command (expects response)"
+          "description": "**Query** (Required)\n\nWhether this is a query command (expects response)"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "parameter": {
       "type": "object",
@@ -125,7 +130,7 @@
         "name": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9_]*$",
-          "description": "Parameter name (lowercase with underscores)"
+          "description": "**Name** (Required)\n\nParameter name (lowercase with underscores)"
         },
         "type": {
           "type": "string",
@@ -135,33 +140,34 @@
             "string",
             "bool"
           ],
-          "description": "Parameter data type"
+          "description": "**Type** (Required)\n\nParameter data type. Supported types: `int`, `float`, `string`, `bool`."
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "**Description** (Optional)\n\nHuman-readable description of the parameter"
         },
         "precision": {
           "type": "number",
           "minimum": 0,
-          "exclusiveMinimum": true,
-          "description": "Floating point precision (for float types)"
+          "description": "**Precision** (Optional)\n\nFloating point precision (for float types), defines precision to what minimum float"
         },
         "min": {
           "type": "number",
-          "description": "Minimum allowed value"
+          "description": "**Min** (Optional)\n\nMinimum allowed value for this parameter"
         },
         "max": {
           "type": "number",
-          "description": "Maximum allowed value"
+          "description": "**Max** (Optional)\n\nMaximum allowed value for this parameter"
         },
         "default": {
           "description": "Default value if not provided"
         },
         "unit": {
           "type": "string",
-          "description": "Physical unit (e.g., 'V', 'Hz', 's')"
+          "description": "**Unit** (Optional)\n\nPhysical unit (e.g., 'V', 'Hz', 's')"
         }
-      }
+      },
+      "additionalProperties": false
     }
   }
 }
