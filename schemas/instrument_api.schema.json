@@ -58,26 +58,6 @@
             "Custom"
           ],
           "description": "Communication protocol type"
-        },
-        "config": {
-          "type": "object",
-          "description": "Protocol-specific configuration",
-          "properties": {
-            "resource_string": {
-              "type": "string",
-              "description": "VISA resource string (for VISA protocol)"
-            },
-            "terminator": {
-              "type": "string",
-              "description": "Command terminator (e.g., \\n, \\r\\n)",
-              "default": "\\n"
-            },
-            "timeout_ms": {
-              "type": "integer",
-              "default": 5000,
-              "description": "Communication timeout in milliseconds"
-            }
-          }
         }
       }
     },

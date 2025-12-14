@@ -8,10 +8,6 @@ instrument:
 
 protocol:
   type: "VISA"
-  config:
-    resource_string: "GPIB0::22::INSTR"
-    terminator: "\n"
-    timeout_ms: 3000
 
 commands:
   SET_VOLTAGE:
