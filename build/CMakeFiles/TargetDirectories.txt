@@ -1,4 +1,5 @@
 /home/tylerk/falcon-dev/instrument-script-schema/build/CMakeFiles/instrument_script_schema.dir
+/home/tylerk/falcon-dev/instrument-script-schema/build/CMakeFiles/template_expander.dir
 /home/tylerk/falcon-dev/instrument-script-schema/build/CMakeFiles/test_validator.dir
 /home/tylerk/falcon-dev/instrument-script-schema/build/CMakeFiles/test_examples.dir
 /home/tylerk/falcon-dev/instrument-script-schema/build/CMakeFiles/test.dir

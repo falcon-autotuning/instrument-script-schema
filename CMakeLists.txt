@@ -42,6 +42,10 @@ target_link_libraries(instrument_script_schema PUBLIC yaml-cpp)
 set_target_properties(instrument_script_schema
                       PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 1)
 
+# Template expander tool
+add_executable(template_expander src/template_expander.cpp)
+target_link_libraries(template_expander PRIVATE yaml-cpp)
+
 # Tests
 if(BUILD_TESTS)
   enable_testing()

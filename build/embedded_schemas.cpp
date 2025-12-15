@@ -4,21 +4,22 @@ namespace instrument_script {
 
 const char *INSTRUMENT_API_SCHEMA = R"delim({
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://falcon. io/schemas/instrument-api.json",
+  "$id": "https://falcon.io/schemas/instrument-api.json",
   "title": "Instrument API Definition",
-  "description": "Schema for defining a single instrument's communication API",
+  "description": "Schema for defining a single instrument's communication API. This schema is designed to be explicit and self-documenting, providing detailed descriptions for all fields and enumerations.",
   "type": "object",
   "required": [
     "api_version",
     "instrument",
     "protocol",
+    "io",
     "commands"
   ],
   "properties": {
     "api_version": {
       "type": "string",
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
-      "description": "Semantic version of this API definition"
+      "description": "**API Version** (Required)\n\nSemantic version string (e.g., `1.0.0`). Defines the instrument API schema version."
     },
     "instrument": {
       "type": "object",
@@ -27,33 +28,34 @@ const char *INSTRUMENT_API_SCHEMA = R"delim({
         "model",
         "identifier"
       ],
+      "description": "**Instrument Configuration** (Required)\n\nDefines the physical instrument details including vendor, model, and identifier.",
       "properties": {
         "vendor": {
           "type": "string",
-          "description": "Manufacturer name (e.g., Keysight, Tektronix)"
+          "description": "**Vendor Name** (Required)\n\nManufacturer of the instrument (e.g., `Keysight`, `Rohde & Schwarz`)."
         },
         "model": {
           "type": "string",
-          "description": "Model number (e.g., DSO9254A)"
+          "description": "**Model Number** (Required)\n\nSpecific model identifier (e.g., `DSO9254A`, `RTM3004`)."
         },
         "identifier": {
           "type": "string",
           "pattern": "^[A-Z][A-Z0-9_]*$",
-          "description": "Unique identifier used in scripts (e.g., GPI1, API1)"
+          "description": "**Unique Identifier** (Required)\n\nA unique identifier for this instrument instance when comparing against others of the same type (e.g., `SCOPE_1`, `GPI`)."
         },
-        "description": {
-          "type": "string"
-        },
-        "firmware_version": {
-          "type": "string"
+        "desc": {
+          "type": "string",
+          "description": "**Description** (Optional)\n\nHuman-readable description of the instrument."
         }
-      }
+      },
+      "additionalProperties": false
     },
     "protocol": {
       "type": "object",
       "required": [
         "type"
       ],
+      "description": "**Protocol Configuration** (Required)\n\nDefines how to communicate with the instrument.",
       "properties": {
         "type": {
           "type": "string",
@@ -61,13 +63,177 @@ const char *INSTRUMENT_API_SCHEMA = R"delim({
             "VISA",
             "Custom"
           ],
-          "description": "Communication protocol type"
+          "description": "**Protocol Type** (Required)\n\nThe communication protocol used to interface with the instrument. `VISA` is a standard for instrument control, while `Custom` allows for user-defined protocols."
         }
+      },
+      "additionalProperties": false
+    },
+    "io": {
+      "type": "array",
+      "description": "**IO Ports** (Required)\n\nDefines all instrument IO ports, including inputs, outputs, triggers, clocks, and settings. Each IO port represents a physical or logical connection point or property of the instrument.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "**Name** (Required)\n\nIO port name (lowercase with underscores). This must be unique within the instrument."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "int",
+              "float",
+              "string",
+              "bool"
+            ],
+            "description": "**Type** (Required)\n\nIO port data type. Supported types:\n- `int`: Integer value\n- `float`: Floating-point value\n- `string`: Text value\n- `bool`: Boolean value"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "input",
+              "output",
+              "inout",
+              "trigger-in",
+              "trigger-out",
+              "clock-in",
+              "clock-out",
+              "setting"
+            ],
+            "description": "**Role** (Required)\n\nDefines the functional purpose of the IO port:\n- `input`: Value or signal provided to the instrument (e.g., setpoint, control input, analog/digital input channel).\n- `output`: Value or signal produced by the instrument (e.g., measurement, status, analog/digital output channel).\n- `inout`: IO port that can function as both input and output, depending on context or configuration.\n- `trigger-in`: Dedicated input for receiving trigger signals from external sources (e.g., to start an acquisition or synchronize with other equipment).\n- `trigger-out`: Dedicated output for sending trigger signals to external devices (e.g., to indicate an event or synchronize other instruments).\n- `clock-in`: Input for receiving an external clock signal (e.g., for synchronization or timing reference).\n- `clock-out`: Output for providing a clock signal to other devices (e.g., to synchronize external equipment).\n- `setting`: Configuration property or persistent setting of the instrument (e.g., range, gain, mode, or other instrument state that can be set and/or queried)."
+          },
+          "description": {
+            "type": "string",
+            "description": "**Description** (Optional)\n\nHuman-readable description of the IO port, including its function and usage."
+          },
+          "unit": {
+            "type": "string",
+            "description": "**Unit** (Optional)\n\nPhysical unit for the IO port value (e.g., 'V' for volts, 'Hz' for hertz, 's' for seconds)."
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "role"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "channel_groups": {
+      "type": "array",
+      "description": "**Channel Groups** (Optional)\n\nDefines groups of synchronized channels, each with their own IO pairings. Channel groups are used for instruments with multiple similar channels (e.g., multi-channel oscilloscopes or digitizers). Each channel group describes the structure and IO types for its channels.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "**Channel Group Name** (Required)\n\nChannel group name (e.g., 'analog', 'digital'). This should be unique within the instrument."
+          },
+          "description": {
+            "type": "string",
+            "description": "**Description** (Optional)\n\nHuman-readable description of the channel group, including its purpose and any special characteristics."
+          },
+          "channel_parameter": {
+            "type": "object",
+            "description": "**Channel Parameter** (Required)\n\nDefinition of the channel parameter for commands operating on this group. This parameter is used to select a specific channel in commands.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "**Name** (Required)\n\nParameter name (e.g., 'channel')."
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "int"
+                ],
+                "description": "**Type** (Required)\n\nParameter type (must be 'int')."
+              },
+              "min": {
+                "type": "integer",
+                "description": "**Min** (Required)\n\nMinimum channel number."
+              },
+              "max": {
+                "type": "integer",
+                "description": "**Max** (Required)\n\nMaximum channel number."
+              },
+              "description": {
+                "type": "string",
+                "description": "**Description** (Optional)\n\nDescription of the channel parameter and its usage."
+              }
+            },
+            "required": [
+              "name",
+              "type",
+              "min",
+              "max"
+            ],
+            "additionalProperties": false
+          },
+          "io_types": {
+            "type": "array",
+            "description": "**IO Types** (Required)\n\nList of IO types for each channel in this group. Each IO type describes a property or signal associated with each channel (e.g., waveform, sample_rate, voltage_range, trigger_level).",
+            "items": {
+              "type": "object",
+              "properties": {
+                "suffix": {
+                  "type": "string",
+                  "description": "**Suffix** (Required)\n\nSuffix for the IO name (e.g., 'waveform', 'sample_rate'). The full IO name for a channel is constructed as '{channel_name}_{suffix}'."
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "int",
+                    "float",
+                    "string",
+                    "bool"
+                  ],
+                  "description": "**Type** (Required)\n\nIO data type for this channel IO."
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "input",
+                    "output",
+                    "inout",
+                    "trigger-in",
+                    "trigger-out",
+                    "clock-in",
+                    "clock-out",
+                    "setting"
+                  ],
+                  "description": "**Role** (Required)\n\nFunctional purpose of this channel IO. See the main IO role documentation for detailed meanings."
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "**Unit** (Optional)\n\nPhysical unit for this channel IO (e.g., 'V', 'Hz', 's')."
+                },
+                "description": {
+                  "type": "string",
+                  "description": "**Description** (Optional)\n\nHuman-readable description of this channel IO type."
+                }
+              },
+              "required": [
+                "suffix",
+                "type",
+                "role"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "name",
+          "count",
+          "channel_parameter",
+          "io_types"
+        ],
+        "additionalProperties": false
       }
     },
     "commands": {
       "type": "object",
-      "description": "Available commands for this instrument",
+      "description": "**Commands** (Required)\n\nInstrument command definitions mapping command names to their implementations. Each command describes a specific action or query that can be performed on the instrument.",
       "patternProperties": {
         "^[A-Z][A-Z0-9_]*$": {
           "$ref": "#/definitions/command"
@@ -80,23 +246,95 @@ const char *INSTRUMENT_API_SCHEMA = R"delim({
     "command": {
       "type": "object",
       "required": [
-        "template"
+        "template",
+        "parameters",
+        "outputs",
+        "query"
       ],
       "properties": {
         "template": {
           "type": "string",
-          "description": "Command template with {param} placeholders (e.g., 'SOUR{channel}: VOLT {voltage}')"
+          "description": "**Template** (Required)\n\nCommand template with {param} placeholders (e.g., 'SOUR{channel}: VOLT {voltage}'). This string describes how the command is formatted for the instrument."
         },
         "description": {
           "type": "string",
-          "description": "Human-readable description of what this command does"
+          "description": "**Description** (Optional)\n\nHuman-readable description of what this command does, including its purpose and any special behavior."
         },
         "parameters": {
           "type": "array",
-          "description": "Ordered list of parameters for this command",
+          "description": "**Parameters** (Required)\n\nOrdered list of parameters for this command. Each parameter must reference an IO port by name or define an inline parameter.",
           "items": {
-            "$ref": "#/definitions/parameter"
+            "type": "object",
+            "properties": {
+              "io": {
+                "type": "string",
+                "description": "**IO Reference** (Optional)\n\nName of the IO port this parameter references. Use this for parameters that correspond to defined IO ports."
+              },
+              "name": {
+                "type": "string",
+                "description": "**Name** (Required for inline parameters)\n\nParameter name (lowercase with underscores). Use this for parameters that do not correspond to a defined IO port."
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "int",
+                  "float",
+                  "string",
+                  "bool"
+                ],
+                "description": "**Type** (Required for inline parameters)\n\nParameter data type. Supported types: `int`, `float`, `string`, `bool`."
+              },
+              "min": {
+                "type": "number",
+                "description": "**Min** (Optional)\n\nMinimum allowed value for this parameter."
+              },
+              "max": {
+                "type": "number",
+                "description": "**Max** (Optional)\n\nMaximum allowed value for this parameter."
+              },
+              "enum": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean"
+                  ]
+                },
+                "description": "**Enum** (Optional)\n\nAllowed values for this parameter."
+              },
+              "description": {
+                "type": "string",
+                "description": "**Description** (Optional)\n\nParameter description (overrides IO description if present)."
+              }
+            },
+            "additionalProperties": false
           }
+        },
+        "channel_group": {
+          "type": "string",
+          "description": "**Channel Group** (Optional)\n\nName of the channel group this command operates on, if applicable. When set, the outputs field should list IO suffixes, not full IO names."
+        },
+        "outputs": {
+          "type": "array",
+          "description": "**Outputs** (Required)\n\nIf `channel_group` is set, this is a list of IO suffixes (e.g., 'waveform', 'sample_rate'). If not, this is a list of IO port names. The parser/tooling must resolve the actual IO name using the channel group and channel parameter.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "**Inputs** (Optional)\n\nNames of IO ports used as inputs for this command."
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "**Triggers** (Optional)\n\nNames of IO ports used as triggers for this command."
         },
         "returns": {
           "type": "string",
@@ -110,14 +348,48 @@ const char *INSTRUMENT_API_SCHEMA = R"delim({
             "array<int>"
           ],
           "default": "void",
-          "description": "Return type of the command"
+          "description": "**Returns** (Optional)\n\nReturn type of the command. Can be `int`, `float`, `string`, `bool`, `array<float>`, `array<int>`, or `void` (no return)."
         },
         "query": {
           "type": "boolean",
           "default": false,
-          "description": "Whether this is a query command (expects response)"
+          "description": "**Query** (Required)\n\nWhether this is a query command (expects response)."
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "channel_group": {
+                "type": "string"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "**Outputs** (Required)\n\nList of IO suffixes for the channel group."
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "**Outputs** (Required)\n\nList of IO port names."
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
     },
     "parameter": {
       "type": "object",
@@ -129,7 +401,7 @@ const char *INSTRUMENT_API_SCHEMA = R"delim({
         "name": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9_]*$",
-          "description": "Parameter name (lowercase with underscores)"
+          "description": "**Name** (Required)\n\nParameter name (lowercase with underscores)."
         },
         "type": {
           "type": "string",
@@ -139,33 +411,115 @@ const char *INSTRUMENT_API_SCHEMA = R"delim({
             "string",
             "bool"
           ],
-          "description": "Parameter data type"
+          "description": "**Type** (Required)\n\nParameter data type. Supported types: `int`, `float`, `string`, `bool`."
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "**Description** (Optional)\n\nHuman-readable description of the parameter."
         },
         "precision": {
-          "type": "number",
-          "minimum": 0,
-          "exclusiveMinimum": true,
-          "description": "Floating point precision (for float types)"
+          "description": "**Precision** (Optional)\n\nFloating point precision (for float types), defines precision to what minimum float or number of digits."
         },
         "min": {
-          "type": "number",
-          "description": "Minimum allowed value"
+          "description": "**Min** (Optional)\n\nMinimum allowed value for this parameter."
         },
         "max": {
-          "type": "number",
-          "description": "Maximum allowed value"
-        },
-        "default": {
-          "description": "Default value if not provided"
+          "description": "**Max** (Optional)\n\nMaximum allowed value for this parameter."
         },
         "unit": {
           "type": "string",
-          "description": "Physical unit (e.g., 'V', 'Hz', 's')"
+          "description": "**Unit** (Optional)\n\nPhysical unit (e.g., 'V', 'Hz', 's')."
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "int"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "min": {
+                "type": "integer"
+              },
+              "max": {
+                "type": "integer"
+              },
+              "precision": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "float"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "precision": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "string",
+                  "bool"
+                ]
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "precision"
+                  ]
+                },
+                {
+                  "required": [
+                    "min"
+                  ]
+                },
+                {
+                  "required": [
+                    "max"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
     }
   }
 }

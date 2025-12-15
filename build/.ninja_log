@@ -1,0 +1,10 @@
+# ninja log v7
+2	19	1765831639523508085	CMakeFiles/instrument_script_schema.dir/embedded_schemas.cpp.o	594065d0752be01f
+2	400	1765831639523985603	CMakeFiles/test_validator.dir/tests/test_validator.cpp.o	130d4848e52ad6cd
+2	562	1765831639524090549	CMakeFiles/test_examples.dir/tests/test_examples.cpp.o	7f4b1ca9d6583a7a
+2	1069	1765831639523858296	CMakeFiles/template_expander.dir/src/template_expander.cpp.o	cc3882fc52b1b0ce
+1069	1121	1765831640590549201	template_expander	1233f94c55e91cb7
+1	1411	1765831639522508046	CMakeFiles/instrument_script_schema.dir/src/schema_validator.cpp.o	4dd082f015a3a407
+1411	1445	1765831640932562372	libinstrument_script_schema.a	1fe366aa9dac3e34
+1445	1503	1765831640967324853	test_examples	63dd2f3e16e9116a
+1445	1504	1765831640966563681	test_validator	92f364cb3bd57348

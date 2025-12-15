@@ -1,0 +1,10 @@
+name: "OSC1"
+api_ref: "./schemas/keysight_dso9254a-api.json"
+connection:
+  type: "VISA"
+  address: "TCPIP0::192.168.1.100::inst0::INSTR"
+startup:
+  init_commands:
+    - "*CLS"
+    - "*RST"
+  delay_ms: 1000
