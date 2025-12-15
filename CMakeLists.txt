@@ -47,6 +47,11 @@ set_target_properties(instrument_script_schema
 add_executable(template_expander src/template_expander.cpp)
 target_link_libraries(template_expander PRIVATE yaml-cpp)
 
+# Insturment confuguration generator tool
+add_executable(instrument_configuration_generator
+               src/instrument_configuration_generator.cpp)
+target_link_libraries(instrument_configuration_generator PRIVATE yaml-cpp)
+
 # Tests
 if(BUILD_TESTS)
   enable_testing()

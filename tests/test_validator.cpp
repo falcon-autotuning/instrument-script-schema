@@ -125,3 +125,46 @@ TEST(SchemaValidatorTest, ValidateQuantumDotDeviceConfig) {
            return msg;
          }();
 }
+
+TEST(SchemaValidatorTest, GenerateAndValidateAgilentInstrumentConfiguration) {
+  std::string api_path = "examples/instrument-apis/agilent_34401a.yaml";
+  std::string tmp_dir = fs::temp_directory_path();
+  std::string config_path = tmp_dir + "/agilent_34401a_config.yaml";
+  std::string cmd =
+      "instrument_configuration_generator " + api_path + " " + config_path;
+  int ret = std::system(cmd.c_str());
+  ASSERT_EQ(ret, 0)
+      << "Failed to generate instrument configuration for Agilent";
+  auto result = SchemaValidator::validate_instrument_configuration(config_path);
+  EXPECT_TRUE(result.valid)
+      << "Validation failed:\n"
+      << [&result] {
+           std::string msg;
+           for (const auto &err : result.errors)
+             msg += "  - " + err.path + ": " + err.message + "\n";
+           return msg;
+         }();
+  std::remove(config_path.c_str());
+}
+
+TEST(SchemaValidatorTest, GenerateAndValidateKeysightInstrumentConfiguration) {
+  std::string api_path =
+      expand_template("examples/instrument-apis/keysight_dso9254a.yaml.tmpl");
+  std::string tmp_dir = fs::temp_directory_path();
+  std::string config_path = tmp_dir + "/keysight_dso9254a_config.yaml";
+  std::string cmd =
+      "instrument_configuration_generator " + api_path + " " + config_path;
+  int ret = std::system(cmd.c_str());
+  ASSERT_EQ(ret, 0)
+      << "Failed to generate instrument configuration for Keysight";
+  auto result = SchemaValidator::validate_instrument_configuration(config_path);
+  EXPECT_TRUE(result.valid)
+      << "Validation failed:\n"
+      << [&result] {
+           std::string msg;
+           for (const auto &err : result.errors)
+             msg += "  - " + err.path + ": " + err.message + "\n";
+           return msg;
+         }();
+  std::remove(config_path.c_str());
+}

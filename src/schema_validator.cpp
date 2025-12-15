@@ -540,5 +540,81 @@ SchemaValidator::validate_quantum_dot_device(const std::string &yaml_path) {
   }
   return result;
 }
+ValidationResult SchemaValidator::validate_instrument_configuration(
+    const std::string &yaml_path) {
+  ValidationResult result;
+  result.valid = true;
+  try {
+    YAML::Node doc = YAML::LoadFile(yaml_path);
+    std::vector<std::string> path;
+
+    // Required top-level fields
+    for (const auto &key : {"name", "api_ref", "connection", "io_config"}) {
+      if (!doc[key] || !doc[key].IsDefined()) {
+        add_error(result, path,
+                  std::string("Missing required field '") + key + "'");
+      }
+    }
+
+    // Validate connection
+    if (doc["connection"]) {
+      if (!doc["connection"].IsMap()) {
+        add_error(result, {"connection"}, "connection must be an object");
+      } else if (!doc["connection"]["type"] ||
+                 !doc["connection"]["type"].IsDefined()) {
+        add_error(result, {"connection"},
+                  "Missing required field 'type' in connection");
+      }
+    }
+
+    // Validate io_config
+    if (!doc["io_config"] || !doc["io_config"].IsMap()) {
+      add_error(result, {"io_config"}, "io_config must be an object");
+    } else {
+      for (auto it = doc["io_config"].begin(); it != doc["io_config"].end();
+           ++it) {
+        std::string io_name = it->first.as<std::string>();
+        const auto &io_entry = it->second;
+        std::vector<std::string> io_path = {"io_config", io_name};
+        // Required fields: type, role
+        for (const auto &req : {"type", "role"}) {
+          if (!io_entry[req] || !io_entry[req].IsDefined()) {
+            add_error(result, io_path,
+                      std::string("Missing required IO field '") + req + "'");
+          }
+        }
+        // type must be one of int, float, string, bool
+        if (io_entry["type"] && io_entry["type"].IsScalar()) {
+          std::string t = io_entry["type"].as<std::string>();
+          if (t != "int" && t != "float" && t != "string" && t != "bool") {
+            add_error(result, io_path,
+                      "type must be one of: int, float, string, bool");
+          }
+        }
+        // role must be one of input, output, inout
+        if (io_entry["role"] && io_entry["role"].IsScalar()) {
+          std::string r = io_entry["role"].as<std::string>();
+          if (r != "input" && r != "output" && r != "inout") {
+            add_error(result, io_path,
+                      "role must be one of: input, output, inout");
+          }
+        }
+        // offset and scale must be numbers if present
+        if (io_entry["offset"] && !io_entry["offset"].IsScalar()) {
+          add_error(result, io_path, "offset must be a number");
+        }
+        if (io_entry["scale"] && !io_entry["scale"].IsScalar()) {
+          add_error(result, io_path, "scale must be a number");
+        }
+      }
+    }
+
+  } catch (const YAML::Exception &e) {
+    result.valid = false;
+    result.errors.push_back(
+        {"", std::string("YAML parse error: ") + e.what(), 0, 0});
+  }
+  return result;
+}
 
 } // namespace instrument_script
