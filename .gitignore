@@ -1,0 +1,2 @@
+# ignores and make binaries and avoids uploading them
+build/
