@@ -28,31 +28,25 @@ commands:
     description: "Set output voltage"
     parameters:
       - io: voltage
-    returns: void
+    outputs: []
   MEASURE_VOLTAGE:
     template: "MEAS:VOLT: DC?"
     description: "Measure DC voltage"
     parameters: []
     outputs: [measured_voltage]
-    returns: float
-    query: true
   SET_RANGE:
     template: "VOLT:RANG {range}"
     description: "Set measurement range"
     parameters:
       - io: range
-    returns: void
+    outputs: []
   GET_VOLTAGE:
     template: "SOUR:VOLT?"
     description: "Get the currently set output voltage"
     parameters: []
     outputs: [voltage]
-    returns: float
-    query: true
   GET_RANGE:
     template: "VOLT:RANG?"
     description: "Get the currently set measurement range"
     parameters: []
     outputs: [range]
-    returns: float
-    query: true

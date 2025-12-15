@@ -1,13 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://falcon.io/schemas/instrument-configuration.json",
-  "title": "Instrument Configuration ",
+  "title": "Instrument Configuration",
   "description": "Schema for specifying a concrete instrument instance to be started on the server. References an instrument API definition and provides connection details.",
   "type": "object",
   "required": [
     "name",
     "api_ref",
-    "connection"
+    "connection",
+    "io_config"
   ],
   "properties": {
     "name": {
@@ -66,6 +67,56 @@
         "delay_ms": {
           "type": "integer",
           "description": "**Startup Delay** (optional, integer)\n\nDelay in milliseconds after connecting before use."
+        }
+      },
+      "additionalProperties": false
+    },
+    "io_config": {
+      "type": "object",
+      "description": "**IO Configuration** (required, object)\n\nConfiguration for each IO port that is an input, output, or inout. Each property key must match the name of an IO port defined in the instrument API with one of these roles. For each IO, you must specify the IO's data type, its role, its physical unit (if applicable), and optional offset and scale values to be applied to the connection.",
+      "patternProperties": {
+        "^[A-Za-z_][A-Za-z0-9_]*$": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "int",
+                "float",
+                "string",
+                "bool"
+              ],
+              "description": "**IO Data Type** (required, string)\n\nThe data type of the IO port. Must be one of: 'int', 'float', 'string', or 'bool'."
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "input",
+                "output",
+                "inout"
+              ],
+              "description": "**IO Role** (required, string)\n\nThe functional role of the IO port. Must be one of: 'input', 'output', or 'inout'."
+            },
+            "unit": {
+              "type": "string",
+              "description": "**Physical Unit** (optional, string)\n\nThe physical unit for the IO port value, such as 'V' for volts, 'Hz' for hertz, or 's' for seconds."
+            },
+            "offset": {
+              "type": "number",
+              "default": 0,
+              "description": "**Offset** (optional, number)\n\nA numeric offset to apply to the IO value. If not specified, the default is 0."
+            },
+            "scale": {
+              "type": "number",
+              "default": 1,
+              "description": "**Scale** (optional, number)\n\nA numeric scale factor to apply to the IO value. If not specified, the default is 1."
+            }
+          },
+          "required": [
+            "type",
+            "role"
+          ],
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

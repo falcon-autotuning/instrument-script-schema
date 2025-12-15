@@ -244,8 +244,7 @@
       "required": [
         "template",
         "parameters",
-        "outputs",
-        "query"
+        "outputs"
       ],
       "properties": {
         "template": {
@@ -331,25 +330,6 @@
             "type": "string"
           },
           "description": "**Triggers** (Optional)\n\nNames of IO ports used as triggers for this command."
-        },
-        "returns": {
-          "type": "string",
-          "enum": [
-            "void",
-            "int",
-            "float",
-            "string",
-            "bool",
-            "array<float>",
-            "array<int>"
-          ],
-          "default": "void",
-          "description": "**Returns** (Optional)\n\nReturn type of the command. Can be `int`, `float`, `string`, `bool`, `array<float>`, `array<int>`, or `void` (no return)."
-        },
-        "query": {
-          "type": "boolean",
-          "default": false,
-          "description": "**Query** (Required)\n\nWhether this is a query command (expects response)."
         }
       },
       "allOf": [

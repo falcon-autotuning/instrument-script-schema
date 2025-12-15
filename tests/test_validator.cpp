@@ -1,76 +1,127 @@
 #include "instrument_script/schema_validator.hpp"
-#include <cassert>
-#include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include <filesystem>
+#include <gtest/gtest.h>
+#include <string>
 
 using namespace instrument_script;
+namespace fs = std::filesystem;
 
-int main() {
-  std::cout << "Testing Schema Validator.. .\n\n";
-
-  // Test 1: Validate Keysight instrument
-  std::cout << "Test 1: Validating keysight_dso9254a.yaml\n";
-  auto result1 = SchemaValidator::validate_instrument_api(
-      "examples/instruments/keysight_dso9254a.yaml");
-
-  if (result1.valid) {
-    std::cout << "  ✓ Valid\n";
-  } else {
-    std::cout << "  ✗ Invalid:\n";
-    for (const auto &err : result1.errors) {
-      std::cout << "    - " << err.path << ": " << err.message << "\n";
-    }
+// Helper to expand template using the template_expander tool
+std::string expand_template(const std::string &tmpl_path) {
+  // Create a temp file for the expanded output
+  std::string tmp_dir = fs::temp_directory_path();
+  std::string expanded_path = tmp_dir + "/keysight_dso9254a_expanded.yaml";
+  std::string cmd = "template_expander " + tmpl_path + " " + expanded_path;
+  int ret = std::system(cmd.c_str());
+  if (ret != 0) {
+    throw std::runtime_error("Failed to expand template: " + tmpl_path);
   }
+  return expanded_path;
+}
 
-  // Test 2: Parse instrument API
-  std::cout << "\nTest 2: Parsing instrument API\n";
-  try {
-    auto api = SchemaValidator::parse_instrument_api(
-        "examples/instruments/keysight_dso9254a.yaml");
-    std::cout << "  ✓ Parsed successfully\n";
-    std::cout << "    Instrument: " << api.instrument.vendor << " "
-              << api.instrument.model << "\n";
-    std::cout << "    Identifier: " << api.instrument.identifier << "\n";
-    std::cout << "    Protocol: " << api.protocol.type << "\n";
-    std::cout << "    Commands:  " << api.commands.size() << "\n";
+TEST(SchemaValidatorTest, ValidateAgilentInstrumentDirect) {
+  // Validate the Agilent instrument directly (not a template)
+  auto result = SchemaValidator::validate_instrument_api(
+      "examples/instrument-apis/agilent_34401a.yaml");
+  EXPECT_TRUE(result.valid)
+      << "Validation failed:\n"
+      << [&result] {
+           std::string msg;
+           for (const auto &err : result.errors)
+             msg += "  - " + err.path + ": " + err.message + "\n";
+           return msg;
+         }();
+}
 
-    for (const auto &[name, cmd] : api.commands) {
-      std::cout << "      - " << name << " (" << cmd.parameters.size()
-                << " params)\n";
-    }
-  } catch (const std::exception &e) {
-    std::cout << "  ✗ Parse failed: " << e.what() << "\n";
-  }
+TEST(SchemaValidatorTest, ValidateAgilentInstrumentWithExpander) {
+  // Validate the Agilent instrument after running through the expander (should
+  // still work)
+  std::string expanded_path =
+      expand_template("examples/instrument-apis/agilent_34401a.yaml");
+  auto result = SchemaValidator::validate_instrument_api(expanded_path);
+  EXPECT_TRUE(result.valid)
+      << "Validation failed:\n"
+      << [&result] {
+           std::string msg;
+           for (const auto &err : result.errors)
+             msg += "  - " + err.path + ": " + err.message + "\n";
+           return msg;
+         }();
+  std::remove(expanded_path.c_str());
+}
 
-  // Test 3: Validate system context
-  std::cout << "\nTest 3: Validating system_context.yaml\n";
-  auto result3 =
+TEST(SchemaValidatorTest, ValidateKeysightInstrument) {
+  std::string expanded_path =
+      expand_template("examples/instrument-apis/keysight_dso9254a.yaml.tmpl");
+  auto result = SchemaValidator::validate_instrument_api(expanded_path);
+  EXPECT_TRUE(result.valid)
+      << "Validation failed:\n"
+      << [&result] {
+           std::string msg;
+           for (const auto &err : result.errors)
+             msg += "  - " + err.path + ": " + err.message + "\n";
+           return msg;
+         }();
+  std::remove(expanded_path.c_str());
+}
+
+TEST(SchemaValidatorTest, ParseKeysightInstrument) {
+  std::string expanded_path =
+      expand_template("examples/instrument-apis/keysight_dso9254a.yaml.tmpl");
+  EXPECT_NO_THROW({
+    auto api = SchemaValidator::parse_instrument_api(expanded_path);
+    EXPECT_EQ(api.instrument.vendor, "Keysight");
+    EXPECT_EQ(api.instrument.model, "DSO9254A");
+    EXPECT_EQ(api.protocol.type, "VISA");
+  });
+  std::remove(expanded_path.c_str());
+}
+
+TEST(SchemaValidatorTest, ValidateSystemContext) {
+  auto result =
       SchemaValidator::validate_system_context("examples/system_context.yaml");
+  EXPECT_TRUE(result.valid)
+      << "Validation failed:\n"
+      << [&result] {
+           std::string msg;
+           for (const auto &err : result.errors)
+             msg += "  - " + err.path + ": " + err.message + "\n";
+           return msg;
+         }();
+}
 
-  if (result3.valid) {
-    std::cout << "  ✓ Valid\n";
-  } else {
-    std::cout << "  ✗ Invalid:\n";
-    for (const auto &err : result3.errors) {
-      std::cout << "    - " << err.path << ": " << err.message << "\n";
-    }
-  }
-
-  // Test 4: Parse runtime contexts
-  std::cout << "\nTest 4: Parsing runtime contexts\n";
-  try {
+TEST(SchemaValidatorTest, ValidateRuntimeContexts) {
+  // If you have a validate_runtime_contexts, use it here.
+  // Otherwise, just check that parsing works.
+  EXPECT_NO_THROW({
     auto contexts = SchemaValidator::parse_runtime_contexts(
         "examples/runtime_contexts.yaml");
-    std::cout << "  ✓ Parsed " << contexts.size() << " contexts\n";
+    EXPECT_GT(contexts.size(), 0);
+  });
+}
 
+TEST(SchemaValidatorTest, ParseRuntimeContexts) {
+  EXPECT_NO_THROW({
+    auto contexts = SchemaValidator::parse_runtime_contexts(
+        "examples/runtime_contexts.yaml");
+    EXPECT_GT(contexts.size(), 0);
     for (const auto &[id, ctx] : contexts) {
-      std::cout << "    - " << id << ": " << ctx.name << " ("
-                << ctx.fields.size() << " fields)\n";
+      EXPECT_FALSE(ctx.name.empty());
     }
-  } catch (const std::exception &e) {
-    std::cout << "  ✗ Parse failed:  " << e.what() << "\n";
-  }
+  });
+}
 
-  std::cout << "\n✓ All tests completed\n";
-
-  return 0;
+TEST(SchemaValidatorTest, ValidateQuantumDotDeviceConfig) {
+  auto result = SchemaValidator::validate_quantum_dot_device(
+      "examples/one_charge_sensor_quantum_dot_device.yaml");
+  EXPECT_TRUE(result.valid)
+      << "Validation failed:\n"
+      << [&result] {
+           std::string msg;
+           for (const auto &err : result.errors)
+             msg += "  - " + err.path + ": " + err.message + "\n";
+           return msg;
+         }();
 }

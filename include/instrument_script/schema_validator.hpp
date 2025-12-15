@@ -24,6 +24,8 @@ public:
   // Validate YAML against schemas
   static ValidationResult validate_instrument_api(const std::string &yaml_path);
   static ValidationResult validate_system_context(const std::string &yaml_path);
+  static ValidationResult
+  validate_quantum_dot_device(const std::string &yaml_path);
 
   // Parse YAML into structs
   static InstrumentAPI parse_instrument_api(const std::string &yaml_path);

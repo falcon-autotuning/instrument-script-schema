@@ -62,6 +62,7 @@ commands:
   GET_SAMPLE_RATE:
     template: "ACQ:SRAT? {analog}"
     description: "Get acquisition sample rate for specified channel"
+    parameters: []
     channel_group: analog
     outputs: [sample_rate]
     returns: float
@@ -69,6 +70,7 @@ commands:
   GET_DATA:
     template: "WAV:DATA? {analog}"
     description: "Retrieve waveform data from the specified channel"
+    parameters: []
     channel_group: analog
     outputs: [waveform]
     returns: array<float>
@@ -87,6 +89,7 @@ commands:
   GET_VOLTAGE_RANGE:
     template: "CHAN{analog}:RANG?"
     description: "Get voltage range for channel"
+    parameters: []
     channel_group: analog
     outputs: [voltage_range]
     returns: float
@@ -94,6 +97,7 @@ commands:
   GET_TRIGGER_LEVEL:
     template: "TRIG:LEV? {analog}"
     description: "Query trigger level for channel"
+    parameters: []
     channel_group: analog
     outputs: [trigger_level]
     returns: float

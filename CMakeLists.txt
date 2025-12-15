@@ -14,6 +14,7 @@ option(BUILD_EXAMPLES "Build examples" ON)
 
 # Find dependencies
 find_package(yaml-cpp REQUIRED)
+find_package(GTest REQUIRED)
 
 # Embed schemas
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/schemas/instrument_api.schema.json"
@@ -51,12 +52,9 @@ if(BUILD_TESTS)
   enable_testing()
 
   add_executable(test_validator tests/test_validator.cpp)
-  target_link_libraries(test_validator PRIVATE instrument_script_schema)
+  target_link_libraries(test_validator PRIVATE instrument_script_schema
+                                               GTest::gtest GTest::gtest_main)
   add_test(NAME ValidatorTests COMMAND test_validator)
-
-  add_executable(test_examples tests/test_examples.cpp)
-  target_link_libraries(test_examples PRIVATE instrument_script_schema)
-  add_test(NAME ExampleTests COMMAND test_examples)
 endif()
 
 # Install targets
