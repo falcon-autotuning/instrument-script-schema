@@ -8,7 +8,6 @@ void expand_channel_groups(YAML::Node &root) {
   auto io = root["io"];
   if (!io)
     io = YAML::Node(YAML::NodeType::Sequence);
-
   if (!root["channel_groups"])
     return;
   for (const auto &group : root["channel_groups"]) {
@@ -21,12 +20,12 @@ void expand_channel_groups(YAML::Node &root) {
         YAML::Node io_entry;
         io_entry["name"] = group_name + std::to_string(ch) + "_" +
                            io_type["suffix"].as<std::string>();
-        io_entry["type"] = io_type["type"];
-        io_entry["role"] = io_type["role"];
+        io_entry["type"] = io_type["type"].as<std::string>();
+        io_entry["role"] = io_type["role"].as<std::string>();
         if (io_type["description"])
-          io_entry["description"] = io_type["description"];
+          io_entry["description"] = io_type["description"].as<std::string>();
         if (io_type["unit"])
-          io_entry["unit"] = io_type["unit"];
+          io_entry["unit"] = io_type["unit"].as<std::string>();
         root["io"].push_back(io_entry);
       }
     }
