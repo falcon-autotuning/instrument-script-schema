@@ -1,5 +1,5 @@
 name: "DMM1"
-api_ref: "./instrument-apis/agilent_34401a-api.json"
+api_ref: "./instrument-apis/agi_34401a-api.json"
 connection:
   type: "VISA"
   address: "GPIB0::22::INSTR"

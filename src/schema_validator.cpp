@@ -1,5 +1,7 @@
 #include "instrument_script/schema_validator.hpp"
+#include <iostream>
 #include <map>
+#include <regex>
 #include <set>
 #include <string>
 #include <vector>
@@ -80,7 +82,6 @@ SchemaValidator::validate_instrument_api(const std::string &yaml_path) {
   result.valid = true;
   try {
     YAML::Node doc = YAML::LoadFile(yaml_path);
-
     // Validate required top-level fields
     std::vector<std::string> path;
     for (const auto &key :
@@ -90,7 +91,6 @@ SchemaValidator::validate_instrument_api(const std::string &yaml_path) {
                   std::string("Missing required field '") + key + "'");
       }
     }
-
     // Validate io is a sequence of maps with required fields
     if (!doc["io"] || !doc["io"].IsSequence()) {
       add_error(result, {"io"}, "IO must be a sequence");
@@ -190,29 +190,88 @@ SchemaValidator::validate_instrument_api(const std::string &yaml_path) {
         // Validate parameters
         if (cmd["parameters"] && !cmd["parameters"].IsSequence()) {
           add_error(result, cmd_path, "parameters must be a sequence");
+          continue; // Prevent further processing of this command
         }
         // Validate outputs (can be empty)
         if (cmd["outputs"] && !cmd["outputs"].IsSequence()) {
           add_error(result, cmd_path, "outputs must be a sequence");
+          continue; // Prevent further processing of this command
         }
         // If channel_group is set, outputs must be suffixes, else must be io
         // names
-        if (cmd["channel_group"]) {
-          if (!cmd["outputs"] || !cmd["outputs"].IsSequence()) {
+        if (!cmd["outputs"] || !cmd["outputs"].IsSequence()) {
+          if (cmd["channel_group"]) {
             add_error(result, cmd_path,
                       "outputs must be a sequence of suffixes when "
                       "channel_group is set");
-          }
-        } else {
-          if (!cmd["outputs"] || !cmd["outputs"].IsSequence()) {
+            continue;
+          } else {
             add_error(result, cmd_path,
                       "outputs must be a sequence of io names when "
                       "channel_group is not set");
+            continue;
           }
+        }
+        if (cmd["template"] && cmd["template"].IsScalar()) {
+          std::string tmpl = cmd["template"].as<std::string>();
+          std::set<std::string> allowed_names;
+          // Add parameter names
+          if (cmd["parameters"] && cmd["parameters"].IsSequence()) {
+            for (const auto &param : cmd["parameters"]) {
+              if (param["name"] && param["name"].IsScalar()) {
+                allowed_names.insert(param["name"].as<std::string>());
+              } else if (param["io"] && param["io"].IsScalar()) {
+                allowed_names.insert(param["io"].as<std::string>());
+              }
+            }
+          }
+          std::cout << "Allowed names for command " << cmd_name << ":\n";
+          std::copy(allowed_names.begin(), allowed_names.end(),
+                    std::ostream_iterator<std::string>(std::cout, " "));
+          // Add channel_group name if present
+          std::string channel_group_name;
+          if (cmd["channel_group"].IsDefined()) {
+            if (!cmd["channel_group"].IsScalar()) {
+              add_error(result, cmd_path,
+                        "channel_group must be a scalar string if defined");
+              continue;
+            }
+            channel_group_name = cmd["channel_group"].as<std::string>();
+            allowed_names.insert(channel_group_name);
+          }
+          std::cout << "Channel group name: " << channel_group_name << "\n";
+
+          // Find all {xxxx} in the template
+          std::regex brace_re("\\{([^}]+)\\}");
+          auto words_begin =
+              std::sregex_iterator(tmpl.begin(), tmpl.end(), brace_re);
+          auto words_end = std::sregex_iterator();
+          std::set<std::string> found_names;
+          for (auto i = words_begin; i != words_end; ++i) {
+            std::string name = (*i)[1].str();
+            found_names.insert(name);
+            if (allowed_names.find(name) == allowed_names.end()) {
+              add_error(
+                  result, cmd_path,
+                  "Template placeholder {" + name +
+                      "} does not match any parameter or channel_group name");
+              continue;
+            }
+          }
+          // If channel_group is set, its name must appear in the template
+          if (!channel_group_name.empty() &&
+              found_names.find(channel_group_name) == found_names.end()) {
+            add_error(result, cmd_path,
+                      "Template for command with channel_group must include {" +
+                          channel_group_name + "} placeholder");
+            continue;
+          }
+          std::cout << "Found names for command " << cmd_name << ":\n";
+          std::copy(found_names.begin(), found_names.end(),
+                    std::ostream_iterator<std::string>(std::cout, " "));
         }
       }
     }
-
   } catch (const YAML::Exception &e) {
     result.valid = false;
     result.errors.push_back(
@@ -507,9 +566,9 @@ SchemaValidator::validate_quantum_dot_device(const std::string &yaml_path) {
         add_error(result, {"wiringDC"}, "wiringDC must be a map/object");
       } else if (wiring.size() != 0 &&
                  wiring.size() != all_global_gates.size()) {
-        add_error(
-            result, {"wiringDC"},
-            "wiringDC must be empty or contain an entry for every global gate");
+        add_error(result, {"wiringDC"},
+                  "wiringDC must be empty or contain an entry for every "
+                  "global gate");
       }
       for (auto it = wiring.begin(); it != wiring.end(); ++it) {
         std::string conn_name = it->first.as<std::string>();

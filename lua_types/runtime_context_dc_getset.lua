@@ -1,11 +1,18 @@
 ---@meta
 
+--- RuntimeContext_DCGetSet provides a context for scripts that perform DC get/set operations.
+--- It allows setting voltages on specified instruments and reading values from others,
+--- supporting batch operations, parallel execution, and logging. This context is typically
+--- used for scripts that need to set outputs and acquire data points from instruments in a coordinated way.
 ---@class RuntimeContext_DCGetSet
----@field getters InstrumentTarget[] Instruments to read from
----@field setters InstrumentTarget[] Instruments to write to
----@field setVoltages table<string, number> Voltages to set (indexed by InstrumentTarget.serialize)
----@field sampleRate number Sampling rate in Hz
----@field numPoints integer Number of points to acquire
----@field call fun(funcName: string, ...): any Call an instrument command or system function
----@field parallel fun(block: function) Execute a block of commands in parallel
----@field log fun(msg: string) Log a message
+---@field getters InstrumentTarget[] Instruments to read from.
+---@field setters InstrumentTarget[] Instruments to write to.
+---@field setVoltages table<string, number> Table mapping instrument target identifiers (as strings) to voltage values to set.
+---@field sampleRate number Sampling rate in Hz for data acquisition.
+---@field numPoints integer Number of data points to acquire during the operation.
+---@field call fun(funcName: string, ...): any
+--- Calls an instrument command or system function by name, passing additional arguments as needed.
+---@field parallel fun(block: function)
+--- Executes a block of instrument commands in parallel, allowing for concurrent operations.
+---@field log fun(msg: string)
+--- Logs a message to the runtime context's logging system for debugging or informational purposes.

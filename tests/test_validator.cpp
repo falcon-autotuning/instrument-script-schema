@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 std::string expand_template(const std::string &tmpl_path) {
   // Create a temp file for the expanded output
   std::string tmp_dir = fs::temp_directory_path();
-  std::string expanded_path = tmp_dir + "/keysight_dso9254a_expanded.yaml";
+  std::string expanded_path = tmp_dir + "/dso9254a_expanded.yaml";
   std::string cmd = "template_expander " + tmpl_path + " " + expanded_path;
   int ret = std::system(cmd.c_str());
   if (ret != 0) {
@@ -24,7 +24,7 @@ std::string expand_template(const std::string &tmpl_path) {
 TEST(SchemaValidatorTest, ValidateAgilentInstrumentDirect) {
   // Validate the Agilent instrument directly (not a template)
   auto result = SchemaValidator::validate_instrument_api(
-      "examples/instrument-apis/agilent_34401a.yaml");
+      "examples/instrument-apis/agi_34401a.yaml");
   EXPECT_TRUE(result.valid)
       << "Validation failed:\n"
       << [&result] {
@@ -39,7 +39,7 @@ TEST(SchemaValidatorTest, ValidateAgilentInstrumentWithExpander) {
   // Validate the Agilent instrument after running through the expander (should
   // still work)
   std::string expanded_path =
-      expand_template("examples/instrument-apis/agilent_34401a.yaml");
+      expand_template("examples/instrument-apis/agi_34401a.yaml");
   auto result = SchemaValidator::validate_instrument_api(expanded_path);
   EXPECT_TRUE(result.valid)
       << "Validation failed:\n"
@@ -54,7 +54,7 @@ TEST(SchemaValidatorTest, ValidateAgilentInstrumentWithExpander) {
 
 TEST(SchemaValidatorTest, ValidateKeysightInstrument) {
   std::string expanded_path =
-      expand_template("examples/instrument-apis/keysight_dso9254a.yaml.tmpl");
+      expand_template("examples/instrument-apis/dso9254a.yaml.tmpl");
   auto result = SchemaValidator::validate_instrument_api(expanded_path);
   EXPECT_TRUE(result.valid)
       << "Validation failed:\n"
@@ -69,7 +69,7 @@ TEST(SchemaValidatorTest, ValidateKeysightInstrument) {
 
 TEST(SchemaValidatorTest, ParseKeysightInstrument) {
   std::string expanded_path =
-      expand_template("examples/instrument-apis/keysight_dso9254a.yaml.tmpl");
+      expand_template("examples/instrument-apis/dso9254a.yaml.tmpl");
   EXPECT_NO_THROW({
     auto api = SchemaValidator::parse_instrument_api(expanded_path);
     EXPECT_EQ(api.instrument.vendor, "Keysight");
@@ -127,9 +127,9 @@ TEST(SchemaValidatorTest, ValidateQuantumDotDeviceConfig) {
 }
 
 TEST(SchemaValidatorTest, GenerateAndValidateAgilentInstrumentConfiguration) {
-  std::string api_path = "examples/instrument-apis/agilent_34401a.yaml";
+  std::string api_path = "examples/instrument-apis/agi_34401a.yaml";
   std::string tmp_dir = fs::temp_directory_path();
-  std::string config_path = tmp_dir + "/agilent_34401a_config.yaml";
+  std::string config_path = tmp_dir + "/agi_34401a_config.yaml";
   std::string cmd =
       "instrument_configuration_generator " + api_path + " " + config_path;
   int ret = std::system(cmd.c_str());
@@ -149,9 +149,9 @@ TEST(SchemaValidatorTest, GenerateAndValidateAgilentInstrumentConfiguration) {
 
 TEST(SchemaValidatorTest, GenerateAndValidateKeysightInstrumentConfiguration) {
   std::string api_path =
-      expand_template("examples/instrument-apis/keysight_dso9254a.yaml.tmpl");
+      expand_template("examples/instrument-apis/dso9254a.yaml.tmpl");
   std::string tmp_dir = fs::temp_directory_path();
-  std::string config_path = tmp_dir + "/keysight_dso9254a_config.yaml";
+  std::string config_path = tmp_dir + "/dso9254a_config.yaml";
   std::string cmd =
       "instrument_configuration_generator " + api_path + " " + config_path;
   int ret = std::system(cmd.c_str());
