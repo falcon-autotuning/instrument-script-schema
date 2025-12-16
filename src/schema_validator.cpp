@@ -1,5 +1,4 @@
 #include "instrument_script/schema_validator.hpp"
-#include <iostream>
 #include <map>
 #include <regex>
 #include <set>
@@ -215,6 +214,7 @@ SchemaValidator::validate_instrument_api(const std::string &yaml_path) {
         if (cmd["template"] && cmd["template"].IsScalar()) {
           std::string tmpl = cmd["template"].as<std::string>();
           std::set<std::string> allowed_names;
+
           // Add parameter names
           if (cmd["parameters"] && cmd["parameters"].IsSequence()) {
             for (const auto &param : cmd["parameters"]) {
@@ -225,21 +225,21 @@ SchemaValidator::validate_instrument_api(const std::string &yaml_path) {
               }
             }
           }
-          std::cout << "Allowed names for command " << cmd_name << ":\n";
-          std::copy(allowed_names.begin(), allowed_names.end(),
-                    std::ostream_iterator<std::string>(std::cout, " "));
+
           // Add channel_group name if present
+          // Re-access from doc to avoid iterator issues
           std::string channel_group_name;
-          if (cmd["channel_group"].IsDefined()) {
-            if (!cmd["channel_group"].IsScalar()) {
+          YAML::Node cmd_fresh = doc["commands"][cmd_name];
+          if (cmd_fresh["channel_group"] &&
+              cmd_fresh["channel_group"].IsDefined()) {
+            if (!cmd_fresh["channel_group"].IsScalar()) {
               add_error(result, cmd_path,
                         "channel_group must be a scalar string if defined");
               continue;
             }
-            channel_group_name = cmd["channel_group"].as<std::string>();
+            channel_group_name = cmd_fresh["channel_group"].as<std::string>();
             allowed_names.insert(channel_group_name);
           }
-          std::cout << "Channel group name: " << channel_group_name << "\n";
 
           // Find all {xxxx} in the template
           std::regex brace_re("\\{([^}]+)\\}");
@@ -255,20 +255,16 @@ SchemaValidator::validate_instrument_api(const std::string &yaml_path) {
                   result, cmd_path,
                   "Template placeholder {" + name +
                       "} does not match any parameter or channel_group name");
-              continue;
             }
           }
+
           // If channel_group is set, its name must appear in the template
           if (!channel_group_name.empty() &&
               found_names.find(channel_group_name) == found_names.end()) {
             add_error(result, cmd_path,
                       "Template for command with channel_group must include {" +
                           channel_group_name + "} placeholder");
-            continue;
           }
-          std::cout << "Found names for command " << cmd_name << ":\n";
-          std::copy(found_names.begin(), found_names.end(),
-                    std::ostream_iterator<std::string>(std::cout, " "));
         }
       }
     }
